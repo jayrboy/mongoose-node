@@ -1,0 +1,18 @@
+{
+  "name": "mongoose-node",
+  "version": "1.0.0",
+  "description": "ตัวอย่างโค้ดที่เขียนแบบ Synchronous กับ Database No-SQL",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --watch index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.1.1",
+    "morgan": "^1.10.0"
+  }
+}
