@@ -475,3 +475,93 @@ Emp.aggregate([
     docs.map((d) => console.log(d._id, d.agg))
   })
 ```
+
+# การแก้ไขข้อมูล (Update)
+
+```js
+findByIdAndUpdate() // ค้นหาจาก id (ได้ผลลัพธ์รายการเดียว) แล้วอัปเดตรายการนั้น
+findOneAndUpdate() // ค้นหาจากเงื่อนไข (ได้ผลลัพธ์รายการเดียว) แล้วอัปเดตรายการนั้น
+updateOne() // อัปเดตเพียงรายการแรกที่ตรงตามเงื่อนไข
+//! updateMany() //! อัปเดตทุกรายการที่ตรงกับเงื่อนไข (fix!)
+```
+
+```js
+//TODO: เปลี่ยนชื่อเดิมเป็น Tom And Jerry
+Emp.findByIdAndUpdate(
+  '65c831969963b4917e72fd81',
+  { name: 'Tom And Jerry' },
+  { useFindAndModify: false }
+)
+  .exec()
+  .then((docs) => {
+    if (!docs) {
+      console.log('อัปเดตไม่สำเร็จ')
+    } else {
+      console.log('อัปเดตสำเร็จ')
+    }
+  })
+  .catch((err) => console.log(err))
+```
+
+```js
+//TODO: ต้องทราบกำหนดเงื่อนไขของรายการที่จะอัปเดต
+Emp.findOneAndUpdate(
+  { name: { $eq: 'Flint Stone' } },
+  { married: true, birthday: new Date(1990, 1, 1) },
+  { useFindAndModify: false }
+)
+  .exec()
+  .then((docs) => {
+    if (!docs) {
+      console.log('อัปเดตไม่สำเร็จ')
+    } else {
+      console.log('อัปเดตสำเร็จ')
+    }
+  })
+  .catch((err) => console.log(err))
+```
+
+- updateOne() และ updateMany() หลักการใช้งานแบบเดียวกัน อาจจะไม่ต้องระบุ useFindAndModify ก็ได้
+- ถ้าเงื่อนไขที่ระบุไม่มีอยู่จริง ข้อมูลก็จะไม่อัปเดต ตรวจสอบได้จาก nModified ใช้กับ methods ที่เกี่ยวกับการอัปเดตทั้งหมด
+
+- อัปเดตค่าเดิม ร่วมกับ operator
+
+```js
+//TODO: เพิ่มเงินเดือนให้คนที่เกิดก่อน 1985/12/31 อีกคนละ 10,000 บาท
+Emp.updateMany(
+  { birthday: { $lte: new Date(1985, 11, 31) } }, // เกิดก่อน 1985/12/31
+  { $inc: { salary: 10000 } } // เพิ่มจากค่าเดิมของ field salary อีก 10000
+)
+  .exec()
+  .then((result) => {
+    if (result && result.nModified) {
+      console.log('จำนวนรายการที่แก้ไข: ' + result.nModified) // undefined
+    } else {
+      console.log('ไม่พบข้อมูลที่ต้องการอัปเดต')
+    }
+  })
+  .catch((err) => console.log(err))
+```
+
+# การลบข้อมูล (Delete)
+
+```js
+findByIdAndDelete() // ค้นหาจาก id (ได้ผลลัพธ์รายการเดียว) แล้วลบรายการนั้น
+findOneAndDelete() // ค้นหาจากเงื่อนไข (ได้ผลลัพธ์รายการเดียว) แล้วลบรายการนั้น
+deleteOne() // ลบเพียงรายการแรกที่ตรงตามเงื่อนไข
+deleteMany() //! ลบทุกรายการที่ตรงกับเงื่อนไข
+```
+
+```js
+Emp.findByIdAndDelete('65c831969963b4917e72fd7c', { useFindAndModify: false })
+  .exec()
+  .then(() => console.log('ลบข้อมูลเรียบร้อย'))
+  .catch((err) => console.log('ลบข้อมูลไม่สำเร็จ'))
+```
+
+```js
+Emp.deleteMany({ birthday: { $lte: new Date(1950, 12, 31) } })
+  .exec()
+  .then((result) => console.log('จำนวนรายการที่ลบ: ' + result.deletedCount)) // จำนวนรายการที่ถูกลบ
+  .catch((err) => console.log('ลบข้อมูลไม่สำเร็จ'))
+```
