@@ -290,3 +290,188 @@ Emp.find()
   })
   .catch((err) => console.log(err))
 ```
+
+4. การเปรียบเทียบด้วย RegEx
+
+- Regular Express เปรียบเทียบ field ที่เป็น "string"
+- กำหนดเงื่อนไขให้แก้ find() หรือ where() อย่างใดอย่างหนึ่ง
+
+```js
+Emp.find({ name: { $regex: /^T/, $options: 'i' } }) // ขึ้นต้นด้วย T หรือ t
+  .exec()
+  .then((docs) => console.log(docs))
+```
+
+```js
+Emp.find()
+  .where('name')
+  .equals(/ON/i) // มีคำว่า on ที่ส่วนใดส่วนหนึ่ง ไม่สนใจรูปแบบตัวพิมพ์
+  .exec()
+  .then((docs) => console.log(docs))
+```
+
+```js
+Emp.find()
+  .where('name')
+  .equals(/martin$/i) // ลงท้ายด้วย matin
+  .exec()
+  .then((docs) => console.log(docs)) // []
+```
+
+# 5. การค้นหาด้วยค่า id
+
+- ถูกเพิ่มอัตโนมัติ ค่าไม่ซ้ำกันในแต่ละ document ของ collection เดียวกัน
+
+```js
+{
+  _id: <ObjectId>
+}
+```
+
+- นำค่า id ไปเก็บไว้ในอีก collection หนึ่ง เพื่อเชื่อมโยงระหว่างกัน
+- ใช้ id มาเป็นเงื่อนไขในการค้นหาข้อมูล อาจใช้ find() หรือ where() ก็ได้
+
+  - findById(id)
+
+```js
+Emp.findById('65c831969963b4917e72fd7c')
+  .exec()
+  .then((docs) => {
+    if (!docs) {
+      console.log('ไม่มีข้อมูล')
+    } else {
+      console.log(docs._id, docs.name) // ข้อมูลรายการเดียว
+    }
+  })
+```
+
+6. การเรียงเรียงลำดับและกำหนดช่วงผลลัพธ์
+
+- ปกติข้อมูลที่อ่านได้ จะเียงตามที่จัดเก็บไว้ในฐานข้อมูล
+- กำหนดวิธีการเรียงลำดับให้ตรงตามที่ต้องการ
+- จำกัดผลลัพธ์ไม่ให้เกินจำนวนที่ระบุได้
+
+- sort('field')
+
+```js
+//TODO: ถ้าเป็น "string" เรียงจาก A -> Z
+//TODO: ถ้าเป็นวันเวลา เรียงจาก เวลามาก่อน -> วันเวลาที่มาทีหลัง
+Emp.find()
+  .sort('salary')
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary)
+    })
+  })
+
+//TODO: ถ้าเป็นแบบตรงกันข้าม (มากไปน้อย) วางเครื่องหมาย - ไว้หน้าชื่อ field
+Emp.find()
+  .sort('-birthday')
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.birthday)
+    })
+  })
+
+//TODO: แบบจัดเรียงลำดับมากกว่า 1 field
+Emp.find()
+  .sort('-birthday salary')
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary, d.birthday)
+    })
+  })
+```
+
+- limit(num_docs)
+- ควรเรียงตามลำดับผลลัพธ์ด้วย sort() แล้วค่อยเรียกเมธอด limit()
+
+```js
+//TODO: ระบุจำนวนรายการผลลัพธ์ (document) ที่ต้องการ
+Emp.find()
+  .sort('-salary') // มากไปหาน้อย
+  .limit(3)
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary)
+    })
+  })
+```
+
+- findOne(condition)
+
+```js
+//TODO: อ่านข้อมูลรายการแรกที่ตรงเงื่อนไข ผลลัพธ์เป็น object เดียว
+Emp.findOne({ name: { $eq: 'Tom Jerry' } })
+  .exec()
+  .then((docs) => {
+    console.log(docs)
+  })
+```
+
+# การจัดกลุ่มข้อมูล
+
+```
+$sum
+$min/ $max
+$avg
+```
+
+- การหาผลรวมของเงินเดือน โดยแยกตามกลุ่มที่แต่งงานแล้ว และยังไม่ได้แต่งงาน
+
+```js
+Emp.aggregate([
+  {
+    $group: {
+      _id: '$married', // ใช้ฟิลด์ married ในการจัดกลุ่ม
+      agg: { $sum: '$salary' }, // หาผลรวมของคอลัมน์ salary
+    },
+  },
+])
+  .exec()
+  .then((docs) => {
+    docs.map((d) => console.log(d))
+  })
+```
+
+- ตรวจสอบว่า ใครอายุมากที่สุด โดยแยกตามกลุ่มทีแต่งงานแล้ว และยังไม่ได้แต่งงาน
+
+```js
+Emp.aggregate([
+  {
+    $group: {
+      _id: '$married', // ใช้ฟิลด์ married ในการจัดกลุ่ม
+      agg: { $min: '$birthday' }, // หาผลรวมของคอลัมน์ salary
+    },
+  },
+])
+  .exec()
+  .then((docs) => {
+    let y = new Date().getFullYear() //current year
+    docs.map((d) => {
+      let b = new Date(Date.parse(d.agg))
+      console.log(d._id, y - b.getFullYear()) //อายุ
+    })
+  })
+```
+
+- การนับจำนวน โดยแยกตามกลุ่มทีแต่งงานแล้ว และยังไม่ได้แต่งงาน
+
+```js
+Emp.aggregate([
+  {
+    $group: {
+      _id: '$married', // ใช้ฟิลด์ married ในการจัดกลุ่ม
+      agg: { $sum: 1 },
+    },
+  },
+])
+  .exec()
+  .then((docs) => {
+    docs.map((d) => console.log(d._id, d.agg))
+  })
+```
