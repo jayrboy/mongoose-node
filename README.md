@@ -172,3 +172,36 @@ docs.map((d) => {
   console.log(d.name, d['salary'], d['phones'][0])
 })
 ```
+
+## การกำหนดเงื่อนไขในการอ่านข้อมูล
+
+- การเปรียบเทียบด้วย method ของ mongoose
+
+```js
+where('field') // กำหนดชื่อฟิลด์ที่จะต้องตรวจสอบเงื่อนไข
+equals(value) // เท่ากับค่าที่ระบุ
+ne(value) // ไม่เท่ากับค่าที่ระบุ
+lt(value) // มีค่า < ค่าที่ระบุ ใช้กับฟิลด์ชนิด Number และ Date
+lte(value) // มีค่า <= ค่าที่ระบุ ใช้กับฟิลด์ชนิด Number และ Date
+gt(value) // มีค่า > ค่าที่ระบุ ใช้กับฟิลด์ชนิด Number และ Dat
+gte(value) // มีค่า >= ค่าที่ระบุ ใช้กับฟิลด์ชนิด Number และ Dat
+// in([v1, v2])  // ตรงกับค่าใดค่าหนึ่งภายในชุดข้อมูลที่ระบุ
+nin([v1, v2]) // ตรงข้ามกับ in
+```
+
+- แนวทางการใช้งาน
+  - find().where().exec() หรือ
+  - find().select().where().exec()
+
+```js
+Emp.find()
+  .select('name salary')
+  .where('salary')
+  .gte(25000) // salary >= 25000
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary)
+    })
+  })
+```
