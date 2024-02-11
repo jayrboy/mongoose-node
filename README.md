@@ -175,7 +175,7 @@ docs.map((d) => {
 
 ## การกำหนดเงื่อนไขในการอ่านข้อมูล
 
-- การเปรียบเทียบด้วย method ของ mongoose
+1. การเปรียบเทียบด้วย method ของ mongoose
 
 ```js
 where('field') // กำหนดชื่อฟิลด์ที่จะต้องตรวจสอบเงื่อนไข
@@ -198,6 +198,42 @@ Emp.find()
   .select('name salary')
   .where('salary')
   .gte(25000) // salary >= 25000
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary)
+    })
+  })
+```
+
+2. การเปรียบเทียบด้วย operator ของ mongoose
+
+```
+$eq = equals() // =
+$ne = ne() // !=
+$lt = lt() // <
+$lte = lte() // =<
+$gt = gt() // >
+$gte = gte() // >=
+$in = in() // ตรงกับใครใดค่าหนึ่งภายในชุดข้อมูลที่ระบะ
+$nin = nin() // ตรงกันข้าม in
+```
+
+- กำหนดให้กับ find() หรือ where() หรือ methods อื่นๆ
+
+```js
+Emp.find({ salary: { $gte: 30000 } }) // salary >= 30000
+  .exec()
+  .then((docs) => {
+    docs.map((d) => {
+      console.log(d.name, d.salary)
+    })
+  })
+```
+
+```js
+Emp.find()
+  .where({ salary: { $gte: 30000 } }) // salary >= 30000
   .exec()
   .then((docs) => {
     docs.map((d) => {
