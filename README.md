@@ -565,3 +565,69 @@ Emp.deleteMany({ birthday: { $lte: new Date(1950, 12, 31) } })
   .then((result) => console.log('จำนวนรายการที่ลบ: ' + result.deletedCount)) // จำนวนรายการที่ถูกลบ
   .catch((err) => console.log('ลบข้อมูลไม่สำเร็จ'))
 ```
+
+## การกำหนด Schema ที่ซับซ้อนขึ้น
+
+```
+default   // ถ้าตอนเพิ่มข้อมูล ไม่ระบุฟิลด์นี้ ก็จะเป็นค่าดังกล่าวแทน
+require   // บังคับว่าต้องใส่ข้อมูลในฟิลด์นี้ (true/false)
+unique    // ข้อมูลในฟิลด์นี้ซ้ำกันได้หรือไม่ (true/false)
+get       // กำหนด function เพื่อจัดการก่อนที่จะ ใส่ลง ในฟิลด์นั้น
+set       // กำหนด function เพื่อจัดการก่อนที่จะ อ่านค่า จากฟิลด์นั้น
+```
+
+```js
+const personSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  gender: {
+    type: String,
+    default: 'male',
+  },
+  age: {
+    type: Number,
+    set: (v) => {
+      let a = perseInt(v)
+      return a == NaN ? 0 : a
+    },
+  },
+})
+export const Person = mongoose.model('Person', personSchema)
+```
+
+- การกำหนดฟิลด์ชนิด String (options)
+
+```
+lowercase/uppercase   //* บังคับต้องใส่ พิมพ์เล็ก/พิมพ์ใหญ่ ทั้งหมดหรือไม่ (true/false)
+enum  //* กำหนดชุดข้อมูลที่ใส่ลงไปได้ (จะกำหนดค่าอื่นๆ นอกเหนือจากนี้ไม่ได้)
+trim  //* ตัดช่องว่างก่อนและหลังสตริงออกไปหรือไม่ (true/false)
+match //* กำหนดรูปแบบสตริงด้วย Regular Express
+minlength/maxlength   //* ความยาวต่ำสุด/สูงสุด ของสตริง
+```
+
+```js
+const userSchema = new mongoose.Schema({
+  login: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true,
+    unique: true,
+  },
+  password: { type: String, required: true, minlength: 5, trim: true },
+  gender: { type: String, enum: ['male', 'female'], default: 'male' },
+})
+export const User = mongoose.model('User', userSchema)
+```
+
+- การกำหนดฟิลด์ชนิด Number และ Date
+
+```js
+const productSchema = new mongoose.Schema({
+  price: { type: Number, min: 0 },
+  expires: { type: Number, min: new Date() },
+})
+export const Product = mongoose.model('Product', productSchema)
+```
